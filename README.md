@@ -231,4 +231,73 @@ EventEmitter를 우리의 콘트롤러-뷰의 변경 이벤트를 방송하기 �
 
 위에 코드에는 몇가지 중요한 것이 있다. 시작하기 위해, 우리는 _todos라 불리우는 개인
 데이터 저장 구조를 관리하고 있다. 이 객체는 모든 개인적인 to-do 아이템을 포함하고 
-있다. 
+있다. 왜냐하면 이 변수 바깥 쪽 클래스로 살아 있지만 모듈의 클로져 내에 있기 때문이다.
+그것 private로 남아 있는다. 그것은 모듈의 바깥쪽에서 직접적으로 바꿀 수 없다. 이 것
+은 우리에게 액션을 통하지 않는 저장소 업데이트에 의한 데이터 흐름의 다른 입출력 인터페이스
+를 보호하도록 돕는다.  
+  
+또 다른 중요한 부분은 디스패쳐로 저장소의 콜백 등록이다. 우리는 우리의 디스패쳐로 payload
+핸들링 콜백을 받으며, 이 저장소가 디스패쳐의 등록의 인덱스를 보존한다. 현재는 콜백 함수
+는 오로지 두개의 액션 형태만을 다루지만, 이후 우리는 우리가 필요한 많은 것들을 추가
+할 수 있을 것이다.
+ 
+## 콘트롤러-뷰로 변경을 듣기
+우리는 저장소 상에서 우리의 컴퍼넌트 계층의 최상단 근처의 리액트 컴포넌트가 변경을 감
+지하는 것이 필요하다. 대규모 앱에서 우리는 이러한 리스닝 컴퍼넌트를 더 가지게 될것이고,
+아마도 페이상의 모든 구역에서 하나 이상이 될 것이다. 페이스 북의 광고 생성 툴에서, 
+우리는 이러한 각각의 특정 UI 구역을 통제하는 많은 콘트롤러와 같은 뷰를 가지고 있다.
+룩백 비디오 에디터에서, 우리는 단지 두가지를 가지고 있다. 프리뷰를 애니메이트 하는 
+하나와 이미지 선택 인터페이스를 위한 하나이다. TodoMVC 예제에서도 하나가 있다. 다시,
+이것은 약간 간결하지만, 전체 코드는 TodoMVC 예제의 TodoApp.react.js에서 볼 수
+ 있다.  
+    
+    var Footer = require('./Footer.react');
+    var Header = require('./Header.react');
+    var MainSection = require('./MainSection.react');
+    var React = require('react');
+    var TodoStore = require('../stores/TodoStore');
+    
+    function getTodoState() {
+      return {
+        allTodos: TodoStore.getAll()
+      };
+    }
+    
+    var TodoApp = React.createClass({
+    
+      getInitialState: function() {
+        return getTodoState();
+      },
+    
+      componentDidMount: function() {
+        TodoStore.addChangeListener(this._onChange);
+      },
+    
+      componentWillUnmount: function() {
+        TodoStore.removeChangeListener(this._onChange);
+      },
+    
+      /**
+       * @return {object}
+       */
+      render: function() {
+        return (
+          <div>
+            <Header />
+            <MainSection
+              allTodos={this.state.allTodos}
+              areAllComplete={this.state.areAllComplete}
+            />
+            <Footer allTodos={this.state.allTodos} />
+          </div>
+        );
+      },
+    
+      _onChange: function() {
+        this.setState(getTodoState());
+      }
+    
+    });
+    
+    module.exports = TodoApp;
+    
