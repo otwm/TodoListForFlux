@@ -300,4 +300,5 @@ EventEmitter를 우리의 콘트롤러-뷰의 변경 이벤트를 방송하기 �
     });
     
     module.exports = TodoApp;
-    
+
+    김동오
